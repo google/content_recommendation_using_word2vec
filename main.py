@@ -26,7 +26,7 @@ logging.basicConfig(
 )
 
 
-def read_csv(path: str) -> pd.DataFrame:
+def _read_csv(path: str) -> pd.DataFrame:
   """Read csv data and return dataframe.
 
   Args:
@@ -45,3 +45,45 @@ def read_csv(path: str) -> pd.DataFrame:
     raise e
 
   return df
+
+
+def execute_content_recommendation_w2v_from_csv(
+    input_file_path: str,
+    content_file_path: str,
+    output_file_path: str,
+    ) -> None:
+  """Trains and predicts content recommendation with word2vec for csv file types.
+
+  Args:
+    input_file_path: A CSV format file path of training data that the content ID
+      is for each line each user in the order that a certain user saw the
+      content.
+    content_file_path: A CSV format file path of content data with content id,
+      content title and content URL.
+    output_file_path: A CSV format file path of output.
+  """
+  df_training = _read_csv(input_file_path)
+  logging.info('Loaded training data with %s.', input_file_path)
+  _ = df_training['item_list'].apply(lambda x: x.split(',')
+                                     ).tolist()
+  logging.info(
+      'Completed a process of loaded data into training data for'
+      'gensim word2vec.'
+  )
+
+  # TODO(): Replace '_' with 'df_content' in next CL.
+  _ = _read_csv(content_file_path)
+  logging.info('Loaded content data.')
+
+  # TODO(): Add feature to execute embedding word2vec
+  # model = execute_embedding_w2v(training_data)
+
+  # TODO(): Add feature sort recommend results for outputs in next CL.
+  # df_result = sort_recommendation_result(model, df_content)
+
+  # TODO(): Replace df_training with df_result in next CL.
+  df_training.to_csv(output_file_path, index=False)
+  logging.info('Completed exportion of predicted data.')
+
+  logging.info('Completed process.')
+
