@@ -27,6 +27,12 @@ _HS = 0
 _NEGATIVE = 5
 _SEED = 1
 
+_KEYWORD = 'keyword'
+_RCM_RESULT = 'rcm_result'
+_RANK = 'rank'
+_SCORE = 'score'
+_TOP_N = 7
+
 logging.basicConfig(
     format='%(asctime)s %(message)s',
     datefmt='%m/%d/%Y %I:%M:%S %p',
@@ -83,6 +89,47 @@ def execute_embedding_w2v(
   return model
 
 
+def sort_recommendation_results(model: gensim.models.word2vec.Word2Vec,
+                                df_content: pd.DataFrame,
+                                ) -> pd.DataFrame:
+  """Sorts recommendation results for easy use as output data.
+
+  Args:
+    model: A model that was trained by gensin word2vec.
+    df_content: A DataFrame of content data with content id,
+      content title and content URL.
+
+  Returns:
+    A dataframe sorted recommendation data with key content id, recommend
+    content id, rank, score.
+  """
+  df_result = pd.DataFrame({_KEYWORD: pd.Series(dtype='object'),
+                            _RCM_RESULT: pd.Series(dtype='object'),
+                            _RANK: pd.Series(dtype='int64'),
+                            _SCORE: pd.Series(dtype='float64'),
+                            })
+
+  for _, content in df_content.iterrows():
+    try:
+      ret = model.wv.most_similar(positive=content[0], topn=_TOP_N)
+    except KeyError as e:
+      logging.debug(
+          'Error happend during loading content item id: %s, %s', content[0], e
+          )
+      continue
+    for i, (rcm_result, score) in enumerate(ret):
+      record = pd.DataFrame([[content[0],
+                              rcm_result,
+                              int(i + 1),
+                              score]
+                             ], columns=df_result.columns
+                            )
+      df_result = pd.concat([df_result, record])
+
+  logging.info('Completed process to sort embedding data.')
+  return df_result
+
+
 def execute_content_recommendation_w2v_from_csv(
     input_file_path: str,
     content_file_path: str,
@@ -107,18 +154,14 @@ def execute_content_recommendation_w2v_from_csv(
       'gensim word2vec.'
   )
 
-  # TODO(): Replace '_' with 'df_content' in next CL.
-  _ = _read_csv(content_file_path)
+  df_content = _read_csv(content_file_path)
   logging.info('Loaded content data.')
 
-  # TODO(): Replace '_' with 'model' in next CL.
-  _ = execute_embedding_w2v(training_data)
+  model = execute_embedding_w2v(training_data)
 
-  # TODO(): Add feature sort recommend results for outputs in next CL.
-  # df_result = sort_recommendation_result(model, df_content)
+  df_result = sort_recommendation_results(model, df_content)
 
-  # TODO(): Replace df_training with df_result in next CL.
-  df_training.to_csv(output_file_path, index=False)
+  df_result.to_csv(output_file_path, index=False)
   logging.info('Completed exportion of predicted data.')
 
   logging.info('Completed process.')
