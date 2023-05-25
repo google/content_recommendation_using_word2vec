@@ -13,8 +13,15 @@
 # limitations under the License.
 
 """Functions for training & predicting content by content recommendation using word2vec.
-"""
 
+Run from project's root directory.
+
+Example: `python -i [Input data path] -c [Content data path] -o [Output path]`
+
+Please check README.md and sample data in the root project for the format of
+input data and content data.
+"""
+import argparse
 import logging
 import gensim
 import pandas as pd
@@ -166,3 +173,47 @@ def execute_content_recommendation_w2v_from_csv(
 
   logging.info('Completed process.')
 
+
+def parse_cli_args() -> argparse.Namespace:
+  """Parses command line arguments.
+
+  Returns:
+    An instance of argparse.Namespace with arg values.
+  """
+  parser = argparse.ArgumentParser()
+  parser.add_argument(
+      '--input', '-i',
+      help='Input data file path to train models.',
+      default=None,
+      required=True,
+      type=str,
+      )
+  parser.add_argument(
+      '--content', '-c',
+      help='Content file path to macth content id with URL in the outputs.',
+      default=None,
+      required=True,
+      type=str,
+      )
+  parser.add_argument(
+      '--output', '-o',
+      help='Output file path for prediction results.',
+      default=None,
+      required=True,
+      type=str,
+      )
+
+  return parser.parse_args()
+
+
+def main() -> None:
+  """Executes contenst recommendation using word2vec for file type."""
+  args = parse_cli_args()
+  execute_content_recommendation_w2v_from_csv(args.input,
+                                              args.content,
+                                              args.output,
+                                              )
+
+
+if __name__ == '__main__':
+  main()
