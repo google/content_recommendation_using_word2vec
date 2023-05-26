@@ -38,7 +38,7 @@ want.
 5. Optional: Directory extract input and contents data from BigQuery.
 
 ### Scheduled execution
-1. Run w2v.py in root directory.
+1. Run main.py in root directory.
 ```
 python main.py -i [Input data path] -c [Content data path] -o [Output path]
 
