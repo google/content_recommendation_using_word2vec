@@ -16,13 +16,20 @@
 
 Run from project's root directory.
 
-Example: `python -i [Input data path] -c [Content data path] -o [Output path]`
+Example:
+  `python -i [Input data path] -c [Content data path] -o [Output path]`
+  `python -i [Input data path] -c [Content data path] -o [Output path] -r -ri
+  [Item name to call ranking results]`
 
 Please check README.md and sample data in the root project for the format of
 input data and content data.
 """
+
 import argparse
+import collections
+from itertools import chain
 import logging
+from typing import Collection
 import gensim
 import pandas as pd
 
@@ -137,10 +144,54 @@ def sort_recommendation_results(model: gensim.models.word2vec.Word2Vec,
   return df_result
 
 
+def execute_ranking_process(training_data: Collection[Collection[str]],
+                            ranking_item_name: str
+                            ) -> pd.DataFrame:
+  """Calculate rank of item ids.
+
+  Args:
+    training_data: An input data to calculate rank.
+    ranking_item_name: A name of the item that calls the ranking data in the
+    output.
+
+  Returns:
+    A dataframe of ranking result top_n.
+  """
+
+  ranking_data = collections.Counter(list(chain.from_iterable(training_data)))
+  ranking_data = ranking_data.most_common(_TOP_N)
+
+  df_ranking = pd.DataFrame({_KEYWORD: pd.Series(dtype='object'),
+                             _RCM_RESULT: pd.Series(dtype='object'),
+                             _RANK: pd.Series(dtype='int64'),
+                             _SCORE: pd.Series(dtype='float64'),
+                             })
+
+  for i, tuple_items in enumerate(ranking_data):
+    try:
+      record = pd.DataFrame([[ranking_item_name,
+                              tuple_items[0],
+                              int(i + 1),
+                              0]
+                             ], columns=df_ranking.columns
+                            )
+      df_ranking = pd.concat([df_ranking, record])
+    except KeyError as e:
+      logging.debug(
+          'Error happend during loading content item id: %s, %s', item_id, e
+          )
+      continue
+  logging.info('Completed process to execute calculation of ranking.')
+
+  return df_ranking
+
+
 def execute_content_recommendation_w2v_from_csv(
     input_file_path: str,
     content_file_path: str,
     output_file_path: str,
+    is_ranking_process: bool = False,
+    ranking_item_name: str = 'undefined',
     ) -> None:
   """Trains and predicts contensts recommendation with word2vec.
 
@@ -151,6 +202,8 @@ def execute_content_recommendation_w2v_from_csv(
     content_file_path: A CSV format file path of content data with content id,
       content title and content URL.
     output_file_path: A CSV format file path of output.
+    is_ranking_process: A flag whether to run the ranking process.
+    ranking_item_name: A keyword to call the ranking result in outputs.
   """
   df_training = _read_csv(input_file_path)
   logging.info('Loaded training data with %s.', input_file_path)
@@ -167,6 +220,10 @@ def execute_content_recommendation_w2v_from_csv(
   model = execute_embedding_w2v(training_data)
 
   df_result = sort_recommendation_results(model, df_content)
+
+  if is_ranking_process:
+    df_ranking = execute_ranking_process(training_data, ranking_item_name)
+    df_result = pd.concat([df_result, df_ranking])
 
   df_result.to_csv(output_file_path, index=False)
   logging.info('Completed exportion of predicted data.')
@@ -202,6 +259,20 @@ def parse_cli_args() -> argparse.Namespace:
       required=True,
       type=str,
       )
+  parser.add_argument(
+      '--is_ranking', '-r',
+      help='Whether to run the ranking process.',
+      default=False,
+      required=False,
+      action=argparse.BooleanOptionalAction,
+      )
+  parser.add_argument(
+      '--ranking_item_name', '-ri',
+      help='Set the keyword to call the ranking result.',
+      default='undefined',
+      required=False,
+      type=str,
+      )
 
   return parser.parse_args()
 
@@ -212,6 +283,8 @@ def main() -> None:
   execute_content_recommendation_w2v_from_csv(args.input,
                                               args.content,
                                               args.output,
+                                              args.is_ranking,
+                                              args.ranking_item_name,
                                               )
 
 
