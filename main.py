@@ -27,11 +27,14 @@ input data and content data.
 
 import argparse
 import collections
-from itertools import chain
+import itertools
 import logging
 from typing import Collection
+
+import constants
 import gensim
 import pandas as pd
+
 
 _SG = 1
 _WINDOWS = 5
@@ -41,10 +44,6 @@ _HS = 0
 _NEGATIVE = 5
 _SEED = 1
 
-_KEYWORD = 'keyword'
-_RCM_RESULT = 'rcm_result'
-_RANK = 'rank'
-_SCORE = 'score'
 _TOP_N = 7
 
 logging.basicConfig(
@@ -103,9 +102,10 @@ def execute_embedding_w2v(
   return model
 
 
-def sort_recommendation_results(model: gensim.models.word2vec.Word2Vec,
-                                df_content: pd.DataFrame,
-                                ) -> pd.DataFrame:
+def sort_recommendation_results(
+    model: gensim.models.word2vec.Word2Vec,
+    df_content: pd.DataFrame,
+) -> pd.DataFrame:
   """Sorts recommendation results for easy use as output data.
 
   Args:
@@ -117,11 +117,12 @@ def sort_recommendation_results(model: gensim.models.word2vec.Word2Vec,
     A dataframe sorted recommendation data with key content id, recommend
     content id, rank, score.
   """
-  df_result = pd.DataFrame({_KEYWORD: pd.Series(dtype='object'),
-                            _RCM_RESULT: pd.Series(dtype='object'),
-                            _RANK: pd.Series(dtype='int64'),
-                            _SCORE: pd.Series(dtype='float64'),
-                            })
+  df_result = pd.DataFrame({
+      constants.KEYWORD: pd.Series(dtype='object'),
+      constants.RCM_RESULT: pd.Series(dtype='object'),
+      constants.RANK: pd.Series(dtype='int64'),
+      constants.SCORE: pd.Series(dtype='float64'),
+  })
 
   for _, content in df_content.iterrows():
     try:
@@ -132,21 +133,23 @@ def sort_recommendation_results(model: gensim.models.word2vec.Word2Vec,
           )
       continue
     for i, (rcm_result, score) in enumerate(ret):
-      record = pd.DataFrame([[content[0],
-                              rcm_result,
-                              int(i + 1),
-                              score]
-                             ], columns=df_result.columns
-                            )
+      record = pd.DataFrame(
+          [[content[0],
+            rcm_result,
+            int(i + 1),
+            score]],
+          columns=df_result.columns
+      )
       df_result = pd.concat([df_result, record])
 
   logging.info('Completed process to sort embedding data.')
   return df_result
 
 
-def execute_ranking_process(training_data: Collection[Collection[str]],
-                            ranking_item_name: str
-                            ) -> pd.DataFrame:
+def execute_ranking_process(
+    training_data: Collection[Collection[str]],
+    ranking_item_name: str
+) -> pd.DataFrame:
   """Calculate rank of item ids.
 
   Args:
@@ -158,14 +161,17 @@ def execute_ranking_process(training_data: Collection[Collection[str]],
     A dataframe of ranking result top_n.
   """
 
-  ranking_data = collections.Counter(list(chain.from_iterable(training_data)))
+  ranking_data = collections.Counter(list(
+      itertools.chain.from_iterable(training_data)
+  ))
   ranking_data = ranking_data.most_common(_TOP_N)
 
-  df_ranking = pd.DataFrame({_KEYWORD: pd.Series(dtype='object'),
-                             _RCM_RESULT: pd.Series(dtype='object'),
-                             _RANK: pd.Series(dtype='int64'),
-                             _SCORE: pd.Series(dtype='float64'),
-                             })
+  df_ranking = pd.DataFrame({
+      constants.KEYWORD: pd.Series(dtype='object'),
+      constants.RCM_RESULT: pd.Series(dtype='object'),
+      constants.RANK: pd.Series(dtype='int64'),
+      constants.SCORE: pd.Series(dtype='float64'),
+  })
 
   for i, tuple_items in enumerate(ranking_data):
     try:
@@ -178,8 +184,10 @@ def execute_ranking_process(training_data: Collection[Collection[str]],
       df_ranking = pd.concat([df_ranking, record])
     except KeyError as e:
       logging.debug(
-          'Error happend during loading content item id: %s, %s', item_id, e
-          )
+          'Error happend during loading content item id: %s, %s',
+          tuple_items[0],
+          e,
+      )
       continue
   logging.info('Completed process to execute calculation of ranking.')
 

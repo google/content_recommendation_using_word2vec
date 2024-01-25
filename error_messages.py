@@ -1,4 +1,4 @@
-# Copyright 2024 Google LLC.
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,22 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-absl-py==2.1.0
-certifi==2022.12.7
-charset-normalizer==3.1.0
-fst-pso==1.8.1
-FuzzyTM==2.0.5
-gensim==4.3.0
-idna==3.4
-miniful==0.0.6
-numpy==1.24.2
-pandas==1.5.3
-pyFUME==0.2.25
-python-dateutil==2.8.2
-pytz==2022.7.1
-requests==2.31.0
-scipy==1.10.1
-simpful==2.10.0
-six==1.16.0
-smart-open==6.3.0
-urllib3==2.1.0
+"""All error messages used in the Content Recommendations using word2vec."""
+
+from typing import Final
+
+NOT_EXISTS_INPUT_FILE: Final[str] = (
+    'The input file dose not exist.'
+)
