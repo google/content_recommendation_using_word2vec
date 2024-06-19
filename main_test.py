@@ -131,7 +131,7 @@ class MainTest(unittest.TestCase):
 
   def test_raise_error_read_csv_with_empty_path(self):
     """Ensures failed with empty path."""
-    with self.assertRaises(IOError):
+    with self.assertRaisesRegex(FileNotFoundError, 'No such file or directory'):
       _ = main._read_csv('')
 
   @mock.patch('main.pd.read_csv', side_effect=[_DUMMY_DF_TRAINNG,

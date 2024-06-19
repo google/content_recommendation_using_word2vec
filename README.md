@@ -32,7 +32,7 @@ embedding.
 ## Deploy
 ### Requirements
 - Google Analytics 4 data in BigQuery
-- Python 3.10 ~
+- Python 3.11.4+
 
 ### Initial Setup
 1. Setup Python environment (e.g. pyenv etc.) with libraries based on requirements.txt.

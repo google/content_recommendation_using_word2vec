@@ -58,8 +58,7 @@ class FirestoreTest(parameterized.TestCase):
     mock_np_loadtxt = mock.patch.object(
         firestore.np,
         'loadtxt',
-        return_value=loadtxt_input_data,
-        autospec=True
+        return_value=loadtxt_input_data
     ).start()
     csv_path = _FAKE_INPUT_FILEPATH
 
