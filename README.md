@@ -14,6 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
+> [!CAUTION]
+> Note that this solution has been archived as of May 2025.
+> No further development or updates will be made to the solution on the Github.
+
 # Content Recommendation using word2vec
 
 **Disclaimer: This is not an official Google product.**
